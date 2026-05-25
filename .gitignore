@@ -58,3 +58,6 @@ web-build/
 .env
 .env.local
 .env.*.local
+
+# EAS / Google Play
+google-service-account.json

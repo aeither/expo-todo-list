@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "expo-todo-list",
+    "name": "中文学习 - Chinese Learner",
     "slug": "expo-todo-list",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,11 +8,23 @@
     "ios": {
       "supportsTablet": true
     },
-    "android": {},
+    "android": {
+      "package": "com.giovannifulin.expotodolist"
+    },
     "web": {},
     "scheme": "expotodolist",
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2f483529-8868-42af-a2a8-3c2736dd1151"
+      }
+    },
+    "owner": "zakez",
+    "plugins": [
+      "expo-sqlite",
+      "expo-image"
+    ]
   }
 }
