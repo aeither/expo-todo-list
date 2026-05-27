@@ -1,12 +1,13 @@
 {
   "name": "expo-todo-list",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "bump": "npm version patch --no-git-tag-version && node -e \"const fs=require('fs'); const pkg=require('./package.json'); const app=require('./app.json'); app.expo.version=pkg.version; fs.writeFileSync('./app.json', JSON.stringify(app, null, 2) + '\\n');\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
