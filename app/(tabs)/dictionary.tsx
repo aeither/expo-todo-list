@@ -10,6 +10,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Link } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { searchDictionary, isDatabaseSeeded, seedDatabase } from '../../src/lib/database';
 import { getSettings } from '../../src/lib/storage';
 import { VocabEntry } from '../../src/types';
@@ -78,7 +80,13 @@ export default function DictionaryScreen() {
           onSubmitEditing={doSearch}
           returnKeyType="search"
         />
-        <TouchableOpacity style={styles.searchButton} onPress={doSearch}>
+        <TouchableOpacity 
+          style={styles.searchButton} 
+          onPress={() => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            doSearch();
+          }}
+        >
           <Text style={styles.searchButtonText}>Search</Text>
         </TouchableOpacity>
       </View>
@@ -143,7 +151,7 @@ function DictRow({ entry }: { entry: VocabEntry }) {
 
   return (
     <View style={styles.resultRow}>
-      <Link href={`/word/${encodeURIComponent(entry.simp)}`} asChild>
+      <Link href={`/dictionary/${encodeURIComponent(entry.simp)}`} asChild>
         <TouchableOpacity style={styles.resultContent}>
           <View style={styles.resultLeft}>
             <Text style={styles.resultHanzi}>{entry.simp}</Text>
@@ -164,10 +172,17 @@ function DictRow({ entry }: { entry: VocabEntry }) {
       </Link>
       <TouchableOpacity
         style={[styles.speakerBtn, speaking && styles.speakerBtnActive]}
-        onPress={() => speak(entry.simp)}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          speak(entry.simp);
+        }}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Text style={styles.speakerIcon}>{speaking ? '🔊' : '🔈'}</Text>
+        <Ionicons 
+          name={speaking ? "volume-high" : "volume-medium-outline"} 
+          size={20} 
+          color={speaking ? "#007AFF" : "#666"} 
+        />
       </TouchableOpacity>
     </View>
   );

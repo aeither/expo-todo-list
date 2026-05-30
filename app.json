@@ -14,7 +14,8 @@
     "web": {},
     "scheme": "expotodolist",
     "experiments": {
-      "reactCompiler": true
+      "reactCompiler": true,
+      "typedRoutes": true
     },
     "extra": {
       "eas": {

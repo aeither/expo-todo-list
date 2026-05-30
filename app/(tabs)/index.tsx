@@ -8,6 +8,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { getDueCards, getStreakData, getBookmarks } from '../../src/lib/storage';
 import { FlashCard } from '../../src/types';
 
@@ -81,40 +83,55 @@ export default function HomeScreen() {
       <Text style={styles.sectionTitle}>Explore</Text>
       <View style={styles.grid}>
         <Link href="/dictionary" asChild>
-          <TouchableOpacity style={styles.gridCard}>
-            <Text style={styles.gridEmoji}>📖</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <Ionicons name="book" size={28} color="#007AFF" style={styles.gridIcon} />
             <Text style={styles.gridTitle}>Dictionary</Text>
             <Text style={styles.gridDesc}>Search 11,000+ words</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/reader" asChild>
-          <TouchableOpacity style={styles.gridCard}>
-            <Text style={styles.gridEmoji}>📰</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <Ionicons name="newspaper" size={28} color="#007AFF" style={styles.gridIcon} />
             <Text style={styles.gridTitle}>Reader</Text>
             <Text style={styles.gridDesc}>Read & learn Chinese</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/games" asChild>
-          <TouchableOpacity style={styles.gridCard}>
-            <Text style={styles.gridEmoji}>🎮</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <Ionicons name="game-controller" size={28} color="#007AFF" style={styles.gridIcon} />
             <Text style={styles.gridTitle}>Games</Text>
             <Text style={styles.gridDesc}>Learn through play</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/flashcards" asChild>
-          <TouchableOpacity style={styles.gridCard}>
-            <Text style={styles.gridEmoji}>🃏</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <Ionicons name="layers" size={28} color="#007AFF" style={styles.gridIcon} />
             <Text style={styles.gridTitle}>Flashcards</Text>
             <Text style={styles.gridDesc}>Spaced repetition</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/bookmarks" asChild>
-          <TouchableOpacity style={styles.gridCard}>
-            <Text style={styles.gridEmoji}>🔖</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <Ionicons name="bookmark" size={28} color="#007AFF" style={styles.gridIcon} />
             <Text style={styles.gridTitle}>Bookmarks</Text>
             <Text style={styles.gridDesc}>{bookmarkCount} saved words</Text>
           </TouchableOpacity>
@@ -142,7 +159,7 @@ function RecentBookmarks() {
   return (
     <View style={styles.recentList}>
       {recent.map((b, i) => (
-        <Link key={i} href={`/word/${encodeURIComponent(b.hanzi)}`} asChild>
+        <Link key={i} href={`/dictionary/${encodeURIComponent(b.hanzi)}`} asChild>
           <TouchableOpacity style={styles.recentItem}>
             <View>
               <Text style={styles.recentHanzi}>{b.hanzi}</Text>
@@ -194,15 +211,20 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '47%',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     padding: 16,
     marginHorizontal: 4,
     marginVertical: 4,
     borderWidth: 1,
     borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  gridEmoji: { fontSize: 28, marginBottom: 8 },
+  gridIcon: { marginBottom: 10 },
   gridTitle: { fontSize: 16, fontWeight: '600', color: '#333' },
   gridDesc: { fontSize: 12, color: '#888', marginTop: 4 },
   recentList: { marginHorizontal: 16, marginBottom: 24, gap: 8 },

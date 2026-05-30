@@ -9,6 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { getWordByHanzi } from '../../src/lib/database';
 import { addBookmark, removeBookmark, isBookmarked, addFlashcard } from '../../src/lib/storage';
 import { VocabEntry } from '../../src/types';
@@ -98,9 +100,16 @@ export default function WordDetailScreen() {
           <Text style={styles.pinyin}>{entry.p}</Text>
           <TouchableOpacity
             style={[styles.speakerBtn, speaking && styles.speakerBtnActive]}
-            onPress={() => speak(entry.simp)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              speak(entry.simp);
+            }}
           >
-            <Text style={styles.speakerIcon}>{speaking ? '🔊' : '🔈'}</Text>
+            <Ionicons 
+              name={speaking ? "volume-high" : "volume-medium"} 
+              size={24} 
+              color={speaking ? "#007AFF" : "#666"} 
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -140,14 +149,25 @@ export default function WordDetailScreen() {
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.actionBtn, bookmarked && styles.actionBtnActive]}
-          onPress={toggleBookmark}
+          onPress={() => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            toggleBookmark();
+          }}
         >
+          <Ionicons name={bookmarked ? "bookmark" : "bookmark-outline"} size={20} color={bookmarked ? "#fff" : "#007AFF"} style={{ marginRight: 8 }} />
           <Text style={[styles.actionBtnText, bookmarked && styles.actionBtnTextActive]}>
-            {bookmarked ? '✓ Bookmarked' : 'Bookmark'}
+            {bookmarked ? 'Bookmarked' : 'Bookmark'}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionBtn, styles.flashcardBtn]} onPress={handleAddFlashcard}>
+        <TouchableOpacity 
+          style={[styles.actionBtn, styles.flashcardBtn]} 
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            handleAddFlashcard();
+          }}
+        >
+          <Ionicons name="layers-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.flashcardBtnText}>Add to Flashcards</Text>
         </TouchableOpacity>
       </View>
@@ -182,9 +202,11 @@ const styles = StyleSheet.create({
   altMeaning: { fontSize: 14, color: '#333', flex: 1 },
   actions: { padding: 20, gap: 12 },
   actionBtn: {
+    flexDirection: 'row',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#007AFF',
   },

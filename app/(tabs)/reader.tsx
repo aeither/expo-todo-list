@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Link } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { getWordByHanzi } from '../../src/lib/database';
 import { addBookmark, removeBookmark } from '../../src/lib/storage';
 import { VocabEntry } from '../../src/types';
 import { useTTS } from '../../src/hooks/useTTS';
+import { segmentChinese } from '../../src/lib/segmenter';
 
 const SAMPLE_TEXTS = [
   '你好！今天天气很好。我们去公园散步吧。',
@@ -21,28 +24,6 @@ const SAMPLE_TEXTS = [
   '中国有很多好吃的食物。我最喜欢饺子和面条。',
   '我的朋友在北京工作。他每天坐地铁上班。',
 ];
-
-function segmentChinese(text: string): string[] {
-  const words: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    const char = text[i];
-    if (/[\u4e00-\u9fff]/.test(char)) {
-      words.push(char);
-      i++;
-    } else if (/\s/.test(char)) {
-      i++;
-    } else {
-      let chunk = '';
-      while (i < text.length && !/[\u4e00-\u9fff\s]/.test(text[i])) {
-        chunk += text[i];
-        i++;
-      }
-      if (chunk) words.push(chunk);
-    }
-  }
-  return words;
-}
 
 export default function ReaderScreen() {
   const [text, setText] = useState('');
@@ -52,6 +33,7 @@ export default function ReaderScreen() {
   const [lookingUp, setLookingUp] = useState(false);
   const [showPinyin, setShowPinyin] = useState(true);
   const [pinyinMap, setPinyinMap] = useState<Record<number, string>>({});
+  const [isWordMap, setIsWordMap] = useState<Record<number, boolean>>({});
 
   function handleTextChange(t: string) {
     setText(t);
@@ -62,20 +44,28 @@ export default function ReaderScreen() {
   }
 
   async function lookupPinyin(segs: string[]) {
-    const map: Record<number, string> = {};
-    for (let i = 0; i < segs.length; i++) {
-      if (/[\u4e00-\u9fff]/.test(segs[i])) {
-        const entry = await getWordByHanzi(segs[i]);
+    const pMap: Record<number, string> = {};
+    const wMap: Record<number, boolean> = {};
+    
+    // Batch lookup for performance
+    const lookups = segs.map(async (seg, index) => {
+      if (/[\u4e00-\u9fff]/.test(seg)) {
+        const entry = await getWordByHanzi(seg);
         if (entry) {
-          map[i] = entry.p;
+          pMap[index] = entry.p;
+          wMap[index] = true;
         }
       }
-    }
-    setPinyinMap(map);
+    });
+
+    await Promise.all(lookups);
+    setPinyinMap(pMap);
+    setIsWordMap(wMap);
   }
 
   async function handleWordTap(word: string) {
     if (!/[\u4e00-\u9fff]/.test(word)) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLookingUp(true);
     setModalVisible(true);
     const entry = await getWordByHanzi(word);
@@ -95,10 +85,6 @@ export default function ReaderScreen() {
     });
   }
 
-  async function handleUnbookmark(hanzi: string) {
-    await removeBookmark(hanzi);
-  }
-
   return (
     <ScrollView
       style={styles.container}
@@ -109,14 +95,28 @@ export default function ReaderScreen() {
       <View style={styles.inputSection}>
         <View style={styles.inputHeader}>
           <Text style={styles.sectionTitle}>Paste Chinese Text</Text>
-          <TouchableOpacity
-            style={[styles.pinyinToggle, showPinyin && styles.pinyinToggleOn]}
-            onPress={() => setShowPinyin(!showPinyin)}
-          >
-            <Text style={[styles.pinyinToggleText, showPinyin && styles.pinyinToggleTextOn]}>
-              Pinyin {showPinyin ? 'ON' : 'OFF'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.clearBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setText('');
+                setSegments([]);
+                setPinyinMap({});
+                setIsWordMap({});
+              }}
+            >
+              <Ionicons name="trash-outline" size={18} color="#FF3B30" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.pinyinToggle, showPinyin && styles.pinyinToggleOn]}
+              onPress={() => setShowPinyin(!showPinyin)}
+            >
+              <Text style={[styles.pinyinToggleText, showPinyin && styles.pinyinToggleTextOn]}>
+                Pinyin {showPinyin ? 'ON' : 'OFF'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <TextInput
           style={styles.textArea}
@@ -153,8 +153,12 @@ export default function ReaderScreen() {
             {segments.map((seg, i) => (
               <TouchableOpacity
                 key={i}
-                style={styles.wordBlock}
+                style={[
+                  styles.wordBlock,
+                  isWordMap[i] && styles.wordBlockMatched
+                ]}
                 onPress={() => handleWordTap(seg)}
+                disabled={!isWordMap[i] && !/[\u4e00-\u9fff]/.test(seg)}
               >
                 {showPinyin && pinyinMap[i] && (
                   <Text style={styles.pinyinText}>{pinyinMap[i]}</Text>
@@ -163,6 +167,7 @@ export default function ReaderScreen() {
                   style={[
                     styles.charText,
                     /[\u4e00-\u9fff]/.test(seg) && styles.chineseChar,
+                    isWordMap[i] && styles.matchedChar,
                   ]}
                 >
                   {seg}
@@ -237,7 +242,7 @@ function ReaderModalContent({
         </View>
       </View>
       <View style={styles.modalActions}>
-        <Link href={`/word/${encodeURIComponent(lookupWord.simp)}`} asChild>
+        <Link href={`/dictionary/${encodeURIComponent(lookupWord.simp)}`} asChild>
           <TouchableOpacity style={styles.actionButton}>
             <Text style={styles.actionButtonText}>Full Details</Text>
           </TouchableOpacity>
@@ -257,6 +262,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   inputSection: { padding: 16 },
   inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  clearBtn: {
+    padding: 6,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
   pinyinToggle: {
     paddingHorizontal: 12,
@@ -299,10 +310,12 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     gap: 2,
   },
-  wordBlock: { alignItems: 'center', paddingHorizontal: 4, paddingVertical: 6 },
+  wordBlock: { alignItems: 'center', paddingHorizontal: 4, paddingVertical: 6, borderRadius: 8 },
+  wordBlockMatched: { backgroundColor: '#007AFF10' },
   pinyinText: { fontSize: 11, color: '#888', marginBottom: 2 },
   charText: { fontSize: 20, color: '#333' },
   chineseChar: { fontSize: 22, fontWeight: '500' },
+  matchedChar: { color: '#007AFF' },
   modalContainer: { flex: 1, backgroundColor: '#fff' },
   modalHeader: { flexDirection: 'row', justifyContent: 'flex-end', padding: 16 },
   modalClose: { color: '#007AFF', fontSize: 17 },

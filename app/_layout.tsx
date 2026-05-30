@@ -5,12 +5,12 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
-        name="word/[hanzi]"
+        name="dictionary/[hanzi]"
         options={{
           headerShown: true,
           title: 'Word Detail',
-          headerBackTitle: 'Back',
-          presentation: 'modal',
+          headerBackTitle: 'Dictionary',
+          presentation: 'card',
         }}
       />
       <Stack.Screen

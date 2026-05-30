@@ -48,7 +48,7 @@ export default function BookmarksScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <Link href={`/word/${encodeURIComponent(item.hanzi)}`} asChild>
+          <Link href={`/dictionary/${encodeURIComponent(item.hanzi)}`} asChild>
             <TouchableOpacity style={styles.row}>
               <View style={styles.rowMain}>
                 <Text style={styles.hanzi}>{item.hanzi}</Text>
